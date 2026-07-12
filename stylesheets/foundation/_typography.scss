@@ -1,0 +1,22 @@
+:root {
+  --hercules-font-family-sans: ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --hercules-font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono",
+    monospace;
+
+  // Alias Discourse's scale so user text-size preferences continue to work.
+  --hercules-text-xs: var(--font-down-2);
+  --hercules-text-sm: var(--font-down-1);
+  --hercules-text-md: var(--font-0);
+  --hercules-text-lg: var(--font-up-1);
+  --hercules-text-xl: var(--font-up-2);
+  --hercules-text-2xl: var(--font-up-3);
+  --hercules-text-3xl: var(--font-up-4);
+
+  --hercules-leading-tight: 1.2;
+  --hercules-leading-normal: 1.5;
+  --hercules-leading-relaxed: 1.7;
+}
+
+// Do not override Discourse's active font until the approved font is available.
+// Discourse's admin font settings remain the source of truth for now.

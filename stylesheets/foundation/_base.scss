@@ -1,0 +1,6 @@
+// Keep this layer deliberately small. Discourse already supplies normalization,
+// layout primitives, focus behavior, and base component styling.
+
+body {
+  font-feature-settings: "kern";
+}

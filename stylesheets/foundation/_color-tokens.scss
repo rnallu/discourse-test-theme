@@ -1,0 +1,24 @@
+// Theme-owned semantic aliases. Discourse generates the palette variables below
+// from the active color scheme in about.json or the admin-selected palette.
+:root {
+  --hercules-text-primary: var(--primary);
+  --hercules-text-secondary: var(--primary-high);
+  --hercules-text-muted: var(--primary-medium);
+  --hercules-text-disabled: var(--primary-low-mid);
+
+  --hercules-surface-page: var(--secondary);
+  --hercules-surface-raised: var(--secondary);
+  --hercules-surface-subtle: var(--primary-very-low);
+  --hercules-surface-hover: var(--primary-very-low);
+
+  --hercules-border-subtle: var(--primary-low);
+  --hercules-border-strong: var(--primary-low-mid);
+
+  --hercules-action-primary: var(--tertiary);
+  --hercules-action-primary-hover: var(--tertiary-hover);
+  --hercules-focus-ring: var(--tertiary-medium);
+
+  --hercules-status-success: var(--success);
+  --hercules-status-danger: var(--danger);
+  --hercules-status-highlight: var(--highlight);
+}

@@ -1,0 +1,25 @@
+@use "stylesheets/foundation/color-tokens";
+@use "stylesheets/foundation/tokens";
+@use "stylesheets/foundation/fonts";
+@use "stylesheets/foundation/typography";
+@use "stylesheets/foundation/base";
+
+// Native Discourse component adapters. Keep these selectors shallow and scoped.
+@use "stylesheets/components/buttons";
+@use "stylesheets/components/forms";
+@use "stylesheets/components/header";
+@use "stylesheets/components/navigation";
+@use "stylesheets/components/surfaces";
+@use "stylesheets/components/topic-list";
+@use "stylesheets/components/category-list";
+@use "stylesheets/components/topic";
+@use "stylesheets/components/composer";
+
+// Route/page composition. These stay empty until page designs are approved.
+@use "stylesheets/pages/home";
+@use "stylesheets/pages/category";
+@use "stylesheets/pages/topic" as page-topic;
+@use "stylesheets/pages/search";
+@use "stylesheets/pages/user";
+
+@use "stylesheets/utilities/accessibility";

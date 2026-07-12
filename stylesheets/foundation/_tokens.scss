@@ -1,0 +1,29 @@
+:root {
+  // Spacing scale. Replace values only when the approved design system differs.
+  --hercules-space-1: 0.25rem;
+  --hercules-space-2: 0.5rem;
+  --hercules-space-3: 0.75rem;
+  --hercules-space-4: 1rem;
+  --hercules-space-5: 1.5rem;
+  --hercules-space-6: 2rem;
+  --hercules-space-7: 3rem;
+  --hercules-space-8: 4rem;
+
+  --hercules-radius-sm: 0.25rem;
+  --hercules-radius-md: 0.5rem;
+  --hercules-radius-lg: 0.75rem;
+  --hercules-radius-pill: 999px;
+
+  --hercules-border-width: 1px;
+  --hercules-shadow-sm: 0 1px 2px rgb(0 0 0 / 8%);
+  --hercules-shadow-md: 0 8px 24px rgb(0 0 0 / 10%);
+
+  --hercules-content-width: 70rem;
+  --hercules-transition-fast: 120ms ease;
+  --hercules-transition-normal: 180ms ease;
+
+  --hercules-font-weight-regular: 400;
+  --hercules-font-weight-medium: 500;
+  --hercules-font-weight-semibold: 600;
+  --hercules-font-weight-bold: 700;
+}

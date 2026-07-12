@@ -1,0 +1,35 @@
+{
+  "name": "Hercules Discourse Theme",
+  "component": false,
+  "license_url": null,
+  "about_url": null,
+  "authors": "Hercules Community Frontend Team",
+  "theme_version": "0.1.0",
+  "minimum_discourse_version": "3.3.0.beta1",
+  "color_schemes": {
+    "Hercules Light": {
+      "primary": "172033",
+      "secondary": "FFFFFF",
+      "tertiary": "2563EB",
+      "quaternary": "DB2777",
+      "header_background": "FFFFFF",
+      "header_primary": "172033",
+      "highlight": "FEF3C7",
+      "danger": "DC2626",
+      "success": "15803D",
+      "love": "DB2777"
+    },
+    "Hercules Dark": {
+      "primary": "E5E7EB",
+      "secondary": "111827",
+      "tertiary": "60A5FA",
+      "quaternary": "F472B6",
+      "header_background": "111827",
+      "header_primary": "F9FAFB",
+      "highlight": "713F12",
+      "danger": "F87171",
+      "success": "4ADE80",
+      "love": "F472B6"
+    }
+  }
+}
