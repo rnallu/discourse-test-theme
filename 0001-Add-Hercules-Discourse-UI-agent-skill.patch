@@ -1,0 +1,519 @@
+From 9bfc01729e455a7defe9a0ab5c45288c66b0fb3a Mon Sep 17 00:00:00 2001
+From: Codex <codex@example.com>
+Date: Mon, 20 Jul 2026 21:15:20 +0800
+Subject: [PATCH] Add Hercules Discourse UI agent skill
+
+---
+ .../skills/implement-discourse-ui/SKILL.md    | 117 ++++++++++++++++++
+ .../references/component-discovery.md         |  52 ++++++++
+ .../references/copilot-prompts.md             |  52 ++++++++
+ .../references/extension-boundaries.md        |  47 +++++++
+ .../references/figma-to-surface.md            |  66 ++++++++++
+ .../references/implementation-and-testing.md  |  92 ++++++++++++++
+ AGENTS.md                                     |  26 ++++
+ 7 files changed, 452 insertions(+)
+ create mode 100644 .github/skills/implement-discourse-ui/SKILL.md
+ create mode 100644 .github/skills/implement-discourse-ui/references/component-discovery.md
+ create mode 100644 .github/skills/implement-discourse-ui/references/copilot-prompts.md
+ create mode 100644 .github/skills/implement-discourse-ui/references/extension-boundaries.md
+ create mode 100644 .github/skills/implement-discourse-ui/references/figma-to-surface.md
+ create mode 100644 .github/skills/implement-discourse-ui/references/implementation-and-testing.md
+ create mode 100644 AGENTS.md
+
+diff --git a/.github/skills/implement-discourse-ui/SKILL.md b/.github/skills/implement-discourse-ui/SKILL.md
+new file mode 100644
+index 0000000..b224c59
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/SKILL.md
+@@ -0,0 +1,117 @@
++---
++name: implement-discourse-ui
++description: Translate Figma exports, screenshots, PDFs, design specifications, or written UI requirements into maintainable Discourse theme code. Use when an agent must plan, implement, review, or troubleshoot Discourse UI; decide between core behavior, theme SCSS, an internal .gjs component, an existing official theme component, a separate custom theme component, a plugin, or a core extension; inventory reusable Discourse components; or verify a design implementation against current Discourse practices.
++---
++
++# Implement Discourse UI
++
++Implement the smallest upgrade-safe change that satisfies the approved design. Preserve native Discourse behavior and accessibility unless the design explicitly changes them.
++
++## Load the relevant references
++
++- Read [figma-to-surface.md](references/figma-to-surface.md) before interpreting screenshots, PDFs, or Figma exports.
++- Read [component-discovery.md](references/component-discovery.md) before creating a new visible component or recommending a theme component.
++- Read [extension-boundaries.md](references/extension-boundaries.md) before selecting an extension mechanism.
++- Read [implementation-and-testing.md](references/implementation-and-testing.md) while changing SCSS, `.gjs`, settings, locales, compatibility metadata, or tests.
++- Read [copilot-prompts.md](references/copilot-prompts.md) when guiding a developer through VS Code Copilot or structuring a multi-pass agent workflow.
++
++## Follow this workflow
++
++### 1. Establish the exact slice
++
++1. Inspect `AGENTS.md`, existing theme structure, `about.json`, `settings.yml`, locale files, initializers, tests, and relevant styles before proposing files.
++2. Record the Discourse version or branch the site runs. Treat APIs, outlets, component names, and DOM selectors as version-specific.
++3. Identify the route, viewport, authentication state, trust level, data state, and interactions represented by every design frame.
++4. List missing states: loading, empty, error, long text, permissions, hover, focus, selected, and mobile.
++5. Separate visual requirements from behavior changes. Do not infer hidden behavior from a static image.
++
++Do not edit code during this pass. Produce a short design-to-surface map and unresolved questions first.
++
++### 2. Discover before building
++
++For every visible region, search in this order:
++
++1. Core site setting or existing feature.
++2. Native core UI and stable CSS custom properties.
++3. Existing theme code already in the repository.
++4. Maintained official Discourse theme component.
++5. Public theme API, transformer, plugin outlet, or documented modifier.
++6. Internal theme `.gjs` component inserted through a supported API.
++7. Separate custom theme component.
++8. Plugin or coordinated core extension.
++
++Inspect the actual candidate source and compatibility before selecting it. Never invent an outlet, transformer, setting, component, or theme component from memory.
++
++### 3. Select the extension boundary
++
++Choose one owner for each requirement. Prefer configuration and composition over replacement.
++
++- Use SCSS and CSS custom properties for presentation-only changes.
++- Use an internal `.gjs` component for theme-specific markup or interaction that belongs only to this theme.
++- Use an existing theme component when it covers most of the requirement, is maintained, and composes cleanly with the theme.
++- Use a separate custom theme component only for an independently reusable or independently deployable feature.
++- Use a plugin for server data, permissions, jobs, persistence, new endpoints, or site-wide behavior that cannot safely live in a theme.
++- Coordinate a core extension when the capability is broadly useful and Discourse agrees on the contract.
++
++Request explicit approval before installing a third-party component, creating a plugin, patching core, using experimental APIs, or relying on invasive overrides.
++
++### 4. Plan the smallest vertical slice
++
++Define:
++
++- the route and design frame;
++- the native surface being adapted;
++- the selected extension mechanism and evidence;
++- exact files to change;
++- reusable tokens and settings;
++- states and breakpoints to verify;
++- automated and manual tests;
++- any question for the Discourse team.
++
++Implement one reviewable surface or behavior at a time. Avoid page-wide rewrites unless the design truly replaces the page and the extension contract supports it.
++
++### 5. Implement in the Discourse style
++
++1. Preserve the repository architecture; do not scaffold a replacement theme.
++2. Use modern `.gjs` components, `apiInitializer`, documented APIs, outlets, transformers, modifiers, and settings supported by the target version.
++3. Keep `common.scss` as an import entry point when that is the repository convention. Organize rules by tokens/foundation, components, and surfaces.
++4. Prefer stable CSS custom properties and shallow selectors. Use the project's token namespace, such as `--hercules-*`, for brand and design values.
++5. Use `@use "lib/viewport"` with viewport helpers instead of hand-maintained breakpoint numbers when supported by the target version.
++6. Put user-facing strings in locale files and configurable values in `settings.yml`.
++7. Preserve keyboard navigation, semantic HTML, focus visibility, reduced motion, contrast, and native responsive behavior.
++8. Add `.discourse-compatibility` constraints when the implementation depends on a minimum or maximum Discourse version.
++
++Do not introduce React, MUI, a parallel router, a global reset, hard-coded desktop columns, hidden native controls, broad `!important`, deep DOM selectors, `modifyClass`, template replacement, or direct DOM mutation unless a documented, reviewed exception requires it.
++
++### 6. Verify before claiming completion
++
++Run repository lint, formatting, and theme tests. Add or update system specs for behavior, especially when using `core_features` pages. Manually verify:
++
++- the exact target route and neighboring native routes;
++- anonymous and authenticated states when applicable;
++- desktop, tablet, and mobile widths;
++- loading, empty, error, overflow, and long-content states;
++- keyboard-only operation and visible focus;
++- light/dark or configured color schemes;
++- coexistence with enabled theme components;
++- browser console errors and deprecations.
++
++Compare implementation screenshots with the design at matching viewport dimensions. Report intentional differences, assumptions, and unverified states.
++
++## Escalate useful questions to the Discourse team
++
++Ask focused contract questions, not general implementation questions:
++
++- Is the proposed outlet, transformer, modifier, or CSS variable supported for the site's target release channel?
++- Is a first-party component or upcoming core feature intended to cover this requirement?
++- Should the behavior become a reusable theme component, a plugin, or a core contribution?
++- What compatibility range and migration path should be expected?
++- Is an experimental API approved for this production project, and who owns breakage during upgrades?
++
++Record their answer beside the extension decision so later agents do not re-litigate it.
++
++## Output expectations
++
++For planning, return a design-to-surface map, component reuse findings, extension decisions, open questions, and a vertical-slice plan.
++
++For implementation, return changed files, the Discourse extension points used, verification performed, remaining design gaps, and upgrade risks. Do not describe a change as complete when it has not been run or visually checked.
+diff --git a/.github/skills/implement-discourse-ui/references/component-discovery.md b/.github/skills/implement-discourse-ui/references/component-discovery.md
+new file mode 100644
+index 0000000..27e3408
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/references/component-discovery.md
+@@ -0,0 +1,52 @@
++# Discover reusable Discourse components
++
++Search before creating a visible component. Prefer official, current, source-backed evidence.
++
++## Search order
++
++1. Inspect the running site's settings, theme components, and relevant route.
++2. Inspect the target Discourse source and theme API for native behavior.
++3. Search the repository for an existing implementation.
++4. Search the official [Theme Component category](https://meta.discourse.org/c/customization/theme-component/120) on Discourse Meta.
++5. Search the [Discourse GitHub organization](https://github.com/discourse?q=theme-component&type=all&language=&sort=updated) and the component's source repository.
++6. Search recent official Meta announcements and developer guides for the feature or extension point.
++
++Useful search terms combine the surface and intent, for example:
++
++- `site:meta.discourse.org/c/customization/theme-component sidebar blocks`
++- `site:github.com/discourse discourse theme component banner`
++- `site:meta.discourse.org transformer topic list Discourse`
++
++## Qualify a candidate
++
++Inspect the source instead of relying on a screenshot or topic title. Record:
++
++- official or community ownership;
++- last meaningful update and recent compatibility activity;
++- supported Discourse version and release channel;
++- modern `.gjs`/theme API usage rather than deprecated template overrides;
++- settings, locales, accessibility, responsive behavior, tests, and documentation;
++- conflicts with the parent theme or other enabled components;
++- whether it supplies behavior, presentation, or both;
++- how much of the approved requirement it covers without invasive overrides.
++
++Prefer a maintained official component that covers most of the requirement and exposes useful settings. Do not install a component only because its name resembles a design region.
++
++## Return an inventory, not a link dump
++
++| Requirement | Core/native option | Existing theme option | Official component | Coverage | Compatibility | Recommendation |
++| --- | --- | --- | --- | --- | --- | --- |
++| Right rail modules | inspect sidebar/block APIs | none found | candidate + source link | high/medium/low | verified/unknown | reuse/adapt/build |
++
++Label a result `not found` only after the official category and GitHub source search. Label it `not verified` when network access or target-version source is unavailable.
++
++## Current examples, not default choices
++
++- [Right Sidebar Blocks](https://meta.discourse.org/t/right-sidebar-blocks/231067) demonstrates configurable sidebar composition.
++- [Versatile Banner](https://meta.discourse.org/t/versatile-banner/109133) demonstrates a reusable banner component.
++
++Treat these as examples to evaluate, not automatic dependencies. Confirm their current source and compatibility at implementation time.
++
++## Avoid stale or risky reuse
++
++Reject or escalate a candidate that depends on deprecated `.hbs` template overrides, unscoped DOM mutation, deep selectors, undocumented core internals, abandoned code, or an incompatible release range. Forking a component transfers upgrade and accessibility ownership to the project; record that cost explicitly.
+diff --git a/.github/skills/implement-discourse-ui/references/copilot-prompts.md b/.github/skills/implement-discourse-ui/references/copilot-prompts.md
+new file mode 100644
+index 0000000..c945513
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/references/copilot-prompts.md
+@@ -0,0 +1,52 @@
++# VS Code Copilot workflow and prompt recipes
++
++Use Copilot Agent mode from the Discourse theme repository root so it can read the entire project. Attach design PNGs or PDFs directly to chat by paste, drag-and-drop, or Add Context on current VS Code versions.
++
++Keep one chat per vertical slice. Ask for analysis before edits, review the plan, then start a fresh implementation message with the approved scope.
++
++## Pass 1: map the design
++
++```text
++Use the implement-discourse-ui skill. Analyze the attached desktop and mobile designs for <route>. Do not edit code. Inspect this repository and the target Discourse version, map each design region to a native Discourse surface, list missing states, and return a design-to-surface table plus questions that could change architecture.
++```
++
++## Pass 2: discover reusable components
++
++```text
++Use the implement-discourse-ui skill. For the approved <route> map, inspect core, this theme, official Discourse Meta theme components, and Discourse-owned GitHub sources. Do not code. Return only verified candidates with source links, compatibility evidence, coverage, and a reuse/adapt/build recommendation. Do not invent component or outlet names.
++```
++
++If work-network browsing is unavailable, perform repository and installed-component discovery, mark external discovery incomplete, and ask a human to supply candidate URLs or run the official searches.
++
++## Pass 3: propose a vertical slice
++
++```text
++Use the implement-discourse-ui skill. Plan the smallest vertical slice for <specific region and behavior>. Use the extension ladder and existing repository architecture. Name exact files, APIs/outlets/transformers verified in source, tokens, settings, states, tests, and risks. Do not edit until I approve the plan.
++```
++
++## Pass 4: implement
++
++```text
++Implement the approved slice only. Preserve native Discourse behavior and existing unrelated changes. Use modern .gjs and supported theme APIs for our target version. Reuse project tokens and existing structure. Run the relevant format, lint, and tests, then summarize changed files, verification, remaining visual differences, and assumptions.
++```
++
++## Pass 5: visual and upgrade review
++
++```text
++Review the implementation against the attached design at the same viewport sizes. Also review the diff for Discourse upgrade risk, accessibility regressions, deep selectors, deprecated APIs, duplicated native behavior, and missing system tests. Do not change code. Return findings ordered by severity with file locations and a minimal fix plan.
++```
++
++## Helpful operating rules
++
++- Name the exact route and frame; avoid “build the whole Figma.”
++- Attach only the relevant images and documents to preserve context.
++- Ask Copilot to cite source files or official URLs for extension claims.
++- Review diffs after each slice and commit human-reviewed checkpoints.
++- Do not accept “tests should pass”; require commands and results.
++- Start a new chat when context becomes noisy, and restate the approved decision record.
++
++Current official VS Code references:
++
++- [Agent Skills](https://code.visualstudio.com/docs/agent-customization/agent-skills)
++- [Custom instructions and AGENTS.md](https://code.visualstudio.com/docs/agent-customization/custom-instructions)
++- [VS Code 1.128 release notes](https://code.visualstudio.com/updates/v1_128)
+diff --git a/.github/skills/implement-discourse-ui/references/extension-boundaries.md b/.github/skills/implement-discourse-ui/references/extension-boundaries.md
+new file mode 100644
+index 0000000..be08259
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/references/extension-boundaries.md
+@@ -0,0 +1,47 @@
++# Choose the Discourse extension boundary
++
++Use the lowest row that fully satisfies the requirement.
++
++| Mechanism | Use for | Keep out |
++| --- | --- | --- |
++| Site setting/core feature | behavior Discourse already supports | brand-only reinvention |
++| Theme CSS variables/SCSS | tokens, typography, spacing, responsive presentation | new data or permissions |
++| Existing official theme component | maintained reusable behavior with strong coverage | heavy forks to force a poor fit |
++| Transformer/modifier/public theme API | supported changes to data or rendering contracts | undocumented internals |
++| Plugin outlet + internal `.gjs` | theme-owned markup and client interaction | server persistence or authorization |
++| Separate custom theme component | independently reusable/deployable client feature | one-off page styling |
++| Plugin | server data, endpoints, jobs, permissions, persistence | visual-only work |
++| Core contribution | broadly useful capability agreed with Discourse | project-specific branding |
++
++## Theme versus theme component
++
++Keep work in the parent theme when it implements the approved brand and page language and ships only with that theme. Create a separate theme component when the feature has its own settings, release lifecycle, reusable behavior, and value across multiple themes.
++
++An internal `.gjs` file is a component in the programming sense; it does not need to become a separately installable Discourse theme component.
++
++## Escalation triggers
++
++Request approval before:
++
++- installing or forking a third-party theme component;
++- creating a new separately deployed theme component;
++- creating a plugin or changing server behavior;
++- modifying or patching Discourse core;
++- using `modifyClass`, a template replacement, direct DOM mutation, or undocumented internals;
++- hiding native controls or changing permission-dependent behavior;
++- adopting an experimental API.
++
++## Blocks API caution
++
++Discourse described a new Blocks API in its June 26, 2026 current-projects update and stated that it was still changing. Treat it as experimental until current official documentation and the Discourse team confirm a stable contract for the target version. Do not put it in the production path based only on an announcement.
++
++Source: [Discourse current projects, June 2026](https://meta.discourse.org/t/current-projects-june-2026/406097).
++
++## Decision record
++
++Record substantial choices in `docs/EXTENSION_DECISIONS.md` if the repository uses that document:
++
++| Requirement | Options checked | Chosen boundary | Why | Version/evidence | Owner | Revisit trigger |
++| --- | --- | --- | --- | --- | --- | --- |
++
++Include the Discourse team's answer when a contract has been confirmed directly.
+diff --git a/.github/skills/implement-discourse-ui/references/figma-to-surface.md b/.github/skills/implement-discourse-ui/references/figma-to-surface.md
+new file mode 100644
+index 0000000..c6335aa
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/references/figma-to-surface.md
+@@ -0,0 +1,66 @@
++# Figma or image to Discourse surface
++
++Use this process for PNG, JPG, WebP, or PDF exports when direct Figma access is unavailable.
++
++## Request an implementation packet
++
++Ask for the smallest coherent packet for one route:
++
++- one full-page desktop export at the intended viewport size;
++- one full-page mobile export;
++- close crops of dense or ambiguous regions;
++- prototype notes or a short screen recording for interaction;
++- typography, colors, spacing, icons, and downloadable assets;
++- component states and variants;
++- the route name, user role, sample data, and expected behavior.
++
++Prefer 1x PNG for layout review and SVG for approved vector assets. Use PDF for multi-frame review, not as the only source of exact asset dimensions. Do not copy text or icon shapes from a raster image when source assets exist.
++
++## Build the design-to-surface map
++
++Before code, create or update `docs/FIGMA_DISCOURSE_MAP.md` if that document exists in the repository. Otherwise return the map in the plan.
++
++| Design region | Discourse route/surface | Native candidate | Data/behavior | States | Decision | Evidence/question |
++| --- | --- | --- | --- | --- | --- | --- |
++| Header | topic list header | core header | search, user menu | anon, member, mobile | retain + style | inspect target version |
++
++Use concrete names after inspecting the running site or source. Do not guess internal component names.
++
++## Read a static design cautiously
++
++Classify each observation:
++
++- **Explicit:** visible or specified in the design.
++- **Native:** behavior already supplied by Discourse and retained.
++- **Assumption:** plausible but unconfirmed.
++- **Missing:** a required state or interaction not supplied.
++
++Stop only when a missing answer changes architecture, data ownership, permissions, or destructive behavior. For minor visual gaps, state a reversible assumption and continue.
++
++## Compare accurately
++
++Match the design viewport and browser zoom. Compare in this order:
++
++1. page structure and content order;
++2. container widths and responsive behavior;
++3. typography and wrapping;
++4. spacing and alignment;
++5. colors, borders, shadows, and imagery;
++6. interactive and accessibility states.
++
++Do not chase pixel differences caused by different sample content, font loading, scrollbar width, or browser rendering until those inputs match.
++
++## Useful progress without complete designs
++
++When designs are incomplete, safely implement or document:
++
++- repository and token architecture;
++- typography and brand asset loading;
++- compatibility range;
++- route and component inventory;
++- extension decision records;
++- testing harness and system-spec setup;
++- a screenshot review checklist;
++- reusable settings and locale structure.
++
++Avoid speculative page layout, navigation restructuring, hidden native controls, or custom markup that may conflict with later frames.
+diff --git a/.github/skills/implement-discourse-ui/references/implementation-and-testing.md b/.github/skills/implement-discourse-ui/references/implementation-and-testing.md
+new file mode 100644
+index 0000000..1742fd1
+--- /dev/null
++++ b/.github/skills/implement-discourse-ui/references/implementation-and-testing.md
+@@ -0,0 +1,92 @@
++# Implement and test in the Discourse style
++
++Use the target repository and target Discourse version as the source of truth. The examples below are architectural guidance, not permission to invent APIs.
++
++## Theme structure
++
++Preserve the established tree. A modern theme commonly contains:
++
++```text
++about.json
++settings.yml
++locales/
++common/common.scss
++stylesheets/
++javascripts/discourse/api-initializers/*.gjs
++spec/system/
++.discourse-compatibility
++```
++
++Keep entry files small. Organize SCSS by the existing convention, such as foundation/tokens, components, and surfaces. Use BEM-like classes for theme-owned markup. Style native Discourse selectors directly only when the selector is stable and narrowly scoped.
++
++## CSS and responsive rules
++
++- Reuse core CSS custom properties before creating project tokens.
++- Put Hercules brand values behind `--hercules-*` tokens when working in the Hercules repository.
++- Use shallow selectors and a route or theme-owned block as the scope.
++- Use logical properties where they improve RTL support.
++- Use the Discourse viewport library when available:
++
++```scss
++@use "lib/viewport";
++
++.hercules-card {
++  @include viewport.until(md) {
++    // Mobile/tablet adaptation
++  }
++}
++```
++
++- Avoid fixed page heights, hard-coded multi-column widths, global resets, and broad `!important`.
++
++## Client customization
++
++Use `.gjs` for modern Glimmer components and co-located templates. Initialize theme behavior with `apiInitializer`. Prefer supported APIs in this order:
++
++1. settings and modifiers;
++2. transformers;
++3. plugin outlets;
++4. documented theme API methods;
++5. narrowly scoped compatibility fallback.
++
++The official guides show current patterns:
++
++- [Using outlets to insert and replace content](https://meta.discourse.org/t/theme-developer-tutorial-4-using-outlets-to-insert-and-replace-content/357799)
++- [Customizing the topic list with transformers](https://meta.discourse.org/t/customizing-the-topic-list/350411)
++- [Discourse theme authoring skill](https://github.com/discourse/discourse-theme-skills/tree/main/.claude/skills/discourse-theme-authoring)
++
++Verify API names in the target source before code generation. Do not use deprecated `.hbs` template overrides for new work.
++
++## Settings, locales, and compatibility
++
++- Put administrator-tunable behavior in `settings.yml`.
++- Put all user-visible text in locale files and use theme translation helpers.
++- Add settings only when a real administrator choice exists; do not turn every design token into a setting.
++- Declare the compatible Discourse range when relying on version-specific APIs.
++- Document any release-channel assumption.
++
++## Tests
++
++Run the repository's own commands. Do not guess package scripts. At minimum:
++
++- lint and format changed SCSS/JS/GJS/YAML;
++- execute existing theme unit/system tests;
++- add a system spec for new user-visible behavior or interaction;
++- use `core_features` pages when the theme relies on native routes and fixtures;
++- test settings on/off and permission-sensitive states;
++- check the browser console for errors and deprecation warnings.
++
++Official reference: [End-to-end system testing for themes and theme components](https://meta.discourse.org/t/end-to-end-system-testing-for-themes-and-theme-components/281579).
++
++## Visual and accessibility review
++
++Capture matching viewport screenshots for the design and implementation. Verify:
++
++- keyboard order, visible focus, semantic controls, and accessible names;
++- hover, focus, active, disabled, loading, empty, error, and overflow states;
++- zoom and long translated strings;
++- mobile and touch targets;
++- configured color schemes and contrast;
++- behavior with native content variations and enabled theme components.
++
++Do not approve a visual diff by hiding content, fixing sample text widths, or replacing native behavior solely to match one static frame.
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..88f3bf0
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,26 @@
++# Hercules Discourse theme instructions
++
++Use `.github/skills/implement-discourse-ui/SKILL.md` for any task that translates a design, screenshot, PDF, or UI requirement into Discourse theme code, or that decides whether to use core, a theme, a theme component, a plugin, or a core extension.
++
++## Project rules
++
++- Treat the existing theme repository and its architecture as the source of truth. Do not scaffold or replace it.
++- Confirm the site's Discourse version or branch before choosing APIs, outlets, transformers, modifiers, components, or selectors.
++- Preserve native Discourse behavior, data flow, permissions, responsive behavior, and accessibility unless an approved requirement explicitly changes them.
++- Prefer, in order: site settings/core features, native core UI, stable CSS variables and SCSS, existing repository code, maintained official Discourse theme components, public theme APIs/transformers/outlets, internal theme `.gjs`, a separate theme component, a plugin, then a coordinated core extension.
++- Search the target source and official Discourse sources before creating a component. Never invent an API, outlet, transformer, setting, or component name.
++- Keep Hercules brand and design values behind existing `--hercules-*` tokens. Preserve the current stylesheet organization and import entry points.
++- Use modern `.gjs`, `apiInitializer`, supported public APIs, locale strings, theme settings, viewport helpers, and `.discourse-compatibility` metadata where applicable.
++- Do not add React, MUI, a parallel router, a global reset, hard-coded page columns, hidden native controls, broad `!important`, deep selectors, deprecated `.hbs` overrides, `modifyClass`, direct DOM mutation, or core patches without an approved and documented exception.
++- Treat the Blocks API announced in June 2026 as experimental until the Discourse team confirms a stable production contract for the target version.
++- Preserve unrelated local changes. Keep each implementation to one reviewable vertical slice.
++
++## Required working pattern
++
++1. Inspect the repository and attached design inputs.
++2. Produce a design-to-surface map and component reuse findings before editing.
++3. Record the selected extension boundary and any contract question for the Discourse team.
++4. Plan exact files, states, breakpoints, and tests; obtain approval when the choice adds a dependency or changes architecture.
++5. Implement the approved slice only.
++6. Run repository lint, formatting, and tests; perform matching-viewport visual and accessibility checks.
++7. Report changed files, verified results, assumptions, remaining design gaps, and upgrade risks.
+-- 
+2.51.1
+
